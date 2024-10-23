@@ -1,0 +1,160 @@
+@import "../../../../styles/variables.scss";
+
+.view-container {
+  display: flex;
+  flex-direction: column;
+  color: $main-color;
+
+  hr {
+    border: none;
+    border: 1px solid #cccccc52;
+    margin: 8px;
+  }
+
+  .header {
+    display: flex;
+    padding-bottom: 8px;
+    font-weight: bold;
+
+    .icon {
+      width: 90px;
+    }
+    .titles {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      span {
+        &:first-child {
+          font-size: 42px;
+          font-weight: 900;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+        &:last-child {
+          font-size: 16px;
+          font-weight: 100;
+        }
+      }
+    }
+  }
+
+  .content-table {
+    display: flex;
+    width: 100%;
+
+    span {
+      display: flex;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .user {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    .guardian {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    ul {
+      list-style-type: none;
+
+      li {
+        padding: 4px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        &:hover {
+          border-radius: 4px;
+          background-color: rgba(128, 128, 128, 0.11);
+        }
+      }
+    }
+  }
+
+  .message {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: minmax(90px, auto);
+
+    .box {
+  
+      gap: 12px;
+      display: flex;
+      border-radius: 4%;
+      background-color: beige;
+    }
+    .box1 {
+      padding: 16px;
+      flex-direction: column;
+     img{
+      border-radius: 12px;
+      width: 100%;
+     }
+
+      span {
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+      }
+    }
+    .box2 {
+      overflow-y: auto;
+      padding: 16px;
+      flex-direction: column;
+    
+      p{
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        background-color: white;
+ 
+        min-height: 50%;
+        padding: 2%;
+        border-radius: 4%;
+      }
+
+      span {
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+      }
+    }
+    .box3 {
+      padding: 16px;
+      flex-direction: column;
+
+      span {
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+      }
+    }
+  }
+
+  .button{
+    display: flex;
+    margin-top: 12px;
+    .next{
+      margin-left: auto;
+      background-color: lighten($main-color, 50%);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.3s, color 0.3s; 
+      &:hover{
+        background-color: $main-color;
+        color: #fff;
+      }
+    }
+  }
+}
