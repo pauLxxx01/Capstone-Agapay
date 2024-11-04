@@ -10,9 +10,10 @@ import Login from "./screens/landing-screen/login-screen/login";
 
 import Homepage from "./screens/home-screen/home/home";
 
-import Fire from "./screens/emergencies/fire/fire";
 import Progress from "./screens/home-screen/progress-report/sending-report/report";
 import Camera from "./screens/camera/camera";
+
+import Notification from './screens/menu-bar/Notification'
 
 import { AuthProvider } from "./context/authContext";
 
@@ -42,12 +43,13 @@ export default function App() {
             component={Homepage}
             options={{ headerShown: false }}
           />
-          {/* Report Progress */}
           <Stack.Screen
-            name="Fire"
-            component={Fire}
+            name="Notification"
+            component={Notification}
             options={{ headerShown: false }}
+
           />
+          {/* Report Progress */}
           <Stack.Screen
             name="Progress"
             component={Progress}

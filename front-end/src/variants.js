@@ -22,8 +22,8 @@ export const fadeIn = (direction, delay) => {
 export const zoomIn = (delay) => {
     return {
       hidden: {
-        scale: 0.5, // start with a smaller scale
-        opacity: 0,
+        scale: 0.95, // start with a smaller scale
+        opacity: 0.95,
       },
       show: {
         scale: 1, // scale up to original size

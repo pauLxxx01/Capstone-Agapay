@@ -3,6 +3,11 @@ const { Schema } = mongoose;
 
 const adminSchema = new mongoose.Schema(
   {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     name: {
       type: String,
       required: [true, "Please add name"],
@@ -18,14 +23,22 @@ const adminSchema = new mongoose.Schema(
       required: [true, "Please add phone number"],
       unique: true,
     },
-    messageReport: [{
-      type: Schema.Types.ObjectId,
-      ref: "Message",
-    }],
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    messageReport: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Message",
+      },
+    ],
     role: {
       type: String,
       default: "admin",
     },
+    verificationToken: String,
+    verificationTokenExpiresAt: Date,
   },
   { timestamps: true }
 );

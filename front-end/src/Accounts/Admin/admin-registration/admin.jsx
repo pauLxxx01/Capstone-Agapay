@@ -6,6 +6,7 @@ import formatPhilippinePhoneNumber from "../../helper/phoneFormat";
 
 const Admin = () => {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
 
@@ -20,12 +21,14 @@ const Admin = () => {
 
     axios
       .post("http://localhost:8080/admin/auth/register", {
+        email,
         name,
         password,
         phoneNumber: formattedPhoneNumber,
       })
       .then((res) => {
         console.log("Data sent: ", {
+          email,
           name,
           password,
           phoneNumber: formattedPhoneNumber,
@@ -53,7 +56,7 @@ const Admin = () => {
             <div className="card-body">
               <form onSubmit={handleUpload}>
                 <div className="form-group">
-                  <label htmlFor="name">Name</label>
+                  <label htmlFor="name">Username</label>
                   <input
                     className="form-control"
                     autoComplete="name"
@@ -61,6 +64,18 @@ const Admin = () => {
                     name="name"
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter username"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="email">Email</label>
+                  <input
+                    className="form-control"
+                    autoComplete="email"
+                    type="text"
+                    name="email"
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter email"
                     required
                   />
                 </div>

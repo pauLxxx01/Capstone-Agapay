@@ -21,7 +21,7 @@
     color: $soft-color;
 
     &:hover {
-      background-color: $hover-light;
+      background-color: $hover-dark;
     }
   }
 
@@ -30,6 +30,6 @@
     height: 35px;
   }
   .active{
-    background-color: $hover-light;
+    background-color: $hover-dark;
   }
 }

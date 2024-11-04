@@ -10,20 +10,24 @@ const Accounts = () => {
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isPasswordVisible, setPasswordVisible] = useState(false);
+
+  const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
 
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:8080/admin/auth/getAdmin"
-        );
-        console.log("API Response:", response.data);
+        const response = await axios.get("/getAdmin");
+      
         const adminData = response.data.admin;
+        console.log("API Response:", adminData);
         setAdmin(adminData || []);
+
       } catch (error) {
         console.error("Error fetching admins:", error);
       }
@@ -34,7 +38,7 @@ const Accounts = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8080/admin/auth/deleteAdmin/${id}`);
+      await axios.delete(`/deleteAdmin/${id}`);
       setAdmin(admins.filter((e) => e._id !== id));
     } catch (error) {
       console.error("Error deleting admin:", error);
@@ -43,8 +47,10 @@ const Accounts = () => {
 
   const handleUpdate = async (id) => {
     const formattedPhoneNumber = formatPhilippinePhoneNumber(phoneNumber);
+
     try {
-      await axios.put(`http://localhost:8080/admin/auth/updateAdmin/${id}`, {
+      await axios.put(`/updateAdmin/${id}`, {
+        email,
         name,
         password,
         phoneNumber: formattedPhoneNumber,
@@ -57,10 +63,11 @@ const Accounts = () => {
   };
 
   const openUpdateModal = (admin) => {
-    console.log(admin._id);
+
     setSelectedAdmin(admin._id); // Store selected admin's ID
     setName(admin.name); // Set the name for the modal
-
+    setEmail(admin.email);
+  
     setPhoneNumber(admin.phoneNumber); // Set the phone number for the modal
     setModalOpen(true);
   };
@@ -77,7 +84,7 @@ const Accounts = () => {
   return (
     <div className="admin-accounts">
       <h2>Admin Accounts</h2>
-      <button  className="btn" onClick={() => navigate("/admin/registration")}>
+      <button className="btn" onClick={() => navigate("/admin/registration")}>
         Create Account
       </button>
       <div className="admin-list">
@@ -91,7 +98,13 @@ const Accounts = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
-               <div className="password-container">
+              <input
+                type="text"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <div className="password-container">
                 <input
                   type={isPasswordVisible ? "text" : "password"} // Step 3
                   placeholder="Password"
@@ -127,16 +140,10 @@ const Accounts = () => {
                 <h3 className="admin-name">{admin.name}</h3>
                 <p className="admin-phone">{admin.phoneNumber}</p>
               </div>
-              <button
-                className="btn"
-                onClick={() => openUpdateModal(admin)}
-              >
+              <button className="btn" onClick={() => openUpdateModal(admin)}>
                 Update
               </button>
-              <button
-                className="btn"
-                onClick={() => handleDelete(admin._id)}
-              >
+              <button className="btn" onClick={() => handleDelete(admin._id)}>
                 Delete
               </button>
             </div>

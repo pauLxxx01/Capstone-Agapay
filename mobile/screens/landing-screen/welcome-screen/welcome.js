@@ -7,13 +7,14 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
+import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const statusBarHeight =
   Dimensions.get("screen").height - Dimensions.get("window").height;
 const fullScreenHeight = Dimensions.get("screen").height;
-const { width, height } = Dimensions.get("window");
 
 console.log(
   `Device Dimensions: \n- Status bar Height: ${statusBarHeight.toFixed(
@@ -23,7 +24,31 @@ console.log(
   )}\n- Full Screen Height: ${fullScreenHeight.toFixed(2)}`
 );
 
-const Welcome = ({ navigation }) => {
+const Welcome = () => {
+  const navigation = useNavigation();
+  const [userToken, setUserToken] = useState(null);
+
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const dataString = await AsyncStorage.getItem("@auth");
+        if (dataString) {
+          const data = JSON.parse(dataString);
+          console.log(data.token);
+          setUserToken(data.token);
+        }
+      } catch (error) {
+        console.error("Error retrieving token:", error);
+      }
+    };
+
+    fetchToken();
+  }, []);
+
+  const handlePress = () => {
+    // Navigate based on token availability
+    navigation.navigate(userToken ? "Homepage" : "SlidingImg");
+  };
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -35,11 +60,9 @@ const Welcome = ({ navigation }) => {
           source={require("../../../assets/agapay/logo/logo.png")}
           style={styles.logo}
         />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate("SlidingImg")}
-        >
-          <Text style={styles.buttonText}>Get started </Text>
+
+        <TouchableOpacity style={styles.button} onPress={handlePress}>
+          <Text style={styles.buttonText}>Get started</Text>
         </TouchableOpacity>
       </ImageBackground>
     </View>
@@ -71,11 +94,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 50,
     borderRadius: 25,
-    elevation: 5, // Adds shadow on Android
+    elevation: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 3.84, // Adds shadow on iOS
+    shadowRadius: 3.84,
   },
   buttonText: {
     color: "#fff",

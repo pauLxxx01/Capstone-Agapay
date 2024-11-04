@@ -5,11 +5,11 @@ import { Dimensions } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 
-const MenuList = ({ navigate, name, navigation, text }) => {
+const MenuList = ({ toNavigate, name, navigation, text }) => {
   return (
     <TouchableOpacity
       style={styles.menuItem}
-      onPress={() => navigation.navigate(navigate)}
+      onPress={() => navigation.navigate(toNavigate)}
     >
       <Icon name={name} size={22} color="#fff" />
       <Text style={styles.menuText}>{text}</Text>

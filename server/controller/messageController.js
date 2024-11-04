@@ -4,14 +4,14 @@ const messageModel = require("../model/messageModel");
 
 const ReportMessage = async (req, res) => {
   try {
-    const { emergency, location, message, senderId,} = req.body;
-    console.log('Incoming request:', req.body, req.file);
+    const { emergency, location, message, senderId, percentage } = req.body;
 
+    console.log("Incoming request:", req.body, req.file);
 
     console.log(emergency, location, message, senderId);
     if (!req.file) {
-      console.error('No file uploaded.');
-      return res.status(400).send('No file uploaded.');
+      console.error("No file uploaded.");
+      return res.status(400).send("No file uploaded.");
     }
     if (!emergency) {
       console.log("ERROR ", emergency);
@@ -34,25 +34,31 @@ const ReportMessage = async (req, res) => {
         .send({ success: false, message: "Message is required" });
     }
 
-    const messages = await userModel.findById(senderId); // Corrected this line
-    if (!messages) {
+    const user = await userModel.findById(senderId); // Corrected this line
+    if (!user) {
       return res.status(404).send({
         success: false,
         message: "User  not found",
       });
     }
-    console.log("hello");
+    console.log(`user id: ${user}`);
 
     const newMessage = new messageModel({
       emergency,
       location,
+      percentage,
       img: req.file ? req.file.filename : null, // Check if req.file exists
       message,
       senderId,
     });
 
-    await newMessage.save();
+    const savedMessage = await newMessage.save();
 
+    // Save the new message ID to the user's messages array
+    user.message = user.message || []; // Ensure messages array exists
+    user.message.push(savedMessage._id); // Add the new message ID
+    await user.save(); // Save the updated user document
+    console.log(user.message);
     return res.status(201).send({
       success: true,
       message: "Message reported successfully",
@@ -68,4 +74,104 @@ const ReportMessage = async (req, res) => {
   }
 };
 
-module.exports = { ReportMessage };
+const getMessages = async (req, res) => {
+  try {
+    const messages = await messageModel.find();
+
+    // Return a success response with a 200 status code
+    return res.status(200).json({
+      success: true,
+      message: "Messages retrieved successfully",
+      messages,
+    });
+  } catch (error) {
+    console.error("Error retrieving messages:", error);
+
+    // Return a more specific error message if needed
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const getSpecificMessage = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const message = await messageModel.findById(id);
+
+    if (!message) {
+      return res.status(404).send({
+        success: false,
+        message: "Message not found",
+      });
+    }
+    const findMessage = await messageModel.findById(id);
+    res.status(200).send({
+      success: true,
+      message: "Message retrieved successfully",
+      data: findMessage,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      success: false,
+      message: "Error retrieving user",
+    });
+  }
+};
+
+const updateMessage = async (req, res) => {
+  const { id } = req.params; // Assuming the ID comes from the request parameters
+  const { respond, percentage } = req.body; // Assuming the respond data comes from the request body
+
+  try {
+    const updatedMessage = await messageModel.findByIdAndUpdate(
+      id,
+      { respond, percentage },
+      { new: true, runValidators: true } // `new: true` returns the updated document, `runValidators` ensures validation
+    );
+
+    if (!updatedMessage) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    return res.status(200).json(updatedMessage);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+const deleteMessage = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const messageExists = await messageModel.findOne({ _id: id });
+    if (!messageExists) {
+      return res.status(404).send({
+        success: false,
+        message: "Message not found",
+      });
+    }
+
+    const deletedMessage = await messageModel.findByIdAndDelete(id);
+    res.status(200).send({
+      success: true,
+      message: "Message deleted successfully",
+      message: deletedMessage,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({
+      success: false,
+      message: "Error deleting message",
+    });
+  }
+};
+
+module.exports = {
+  ReportMessage,
+  getMessages,
+  getSpecificMessage,
+  updateMessage,
+  deleteMessage,
+};

@@ -1,6 +1,7 @@
 const { hashPassword, comparePassword } = require("../helpers/authHelper");
 const parentModel = require("../model/parentModel");
 const userModel = require("../model/userModel");
+const messageModel = require("../model/messageModel");
 const JWT = require("jsonwebtoken");
 
 const updateAccounts = async (req, res) => {
@@ -238,6 +239,30 @@ const getSpecificUser = async (req, res) => {
     });
   }
 };
+const getSpecificParent = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const parentExist = await parentModel.findOne({ _id: id });
+    if (!parentExist) {
+      return res.status(404).send({
+        success: false,
+        message: "Parent not found",
+      });
+    }
+    const findParents = await parentModel.findById(id);
+    res.status(200).send({
+      success: true,
+      message: "Parent retrieved successfully",
+      parent: findParents,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      success: false,
+      message: "Error retrieving parent",
+    });
+  }
+};
 
 const deleteUser = async (req, res) => {
   try {
@@ -256,6 +281,7 @@ const deleteUser = async (req, res) => {
       message: "User deleted successfully",
     });
     console.log(`User deleted: ${deletedUser.name}`);
+    console.log("\n\nUser and parent deleted successfully!\n\n");
   } catch (error) {
     console.error(error);
     res.status(500).send({
@@ -325,6 +351,7 @@ const loginController = async (req, res) => {
     const user = await userModel.findOne({ userId });
 
     if (!user) {
+      console.log("User not found")
       return res.status(404).send({
         success: false,
         message: "User not found",
@@ -342,13 +369,16 @@ const loginController = async (req, res) => {
     }
 
     //Token JWT
-    const token = await JWT.sign(
+    const token = JWT.sign(
       { userId: user.userId },
       process.env.JWT_SECRET,
       {
-        expiresIn: "1h", // 1 hour token expiry
+        expiresIn: "1y", // 1 hour token expiry
       }
     );
+    const decodedToken = JWT.decode(token);
+    console.log(decodedToken, decodedToken.exp); 
+
     res.status(200).send({
       success: true,
       message: "User logged in successfully",
@@ -380,6 +410,7 @@ module.exports = {
   //for parent
   deleteParent,
   getParent,
+  getSpecificParent,
 
   //specific for user._id
   getSpecificUser,

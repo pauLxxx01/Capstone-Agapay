@@ -1,10 +1,18 @@
 const { hashPassword, comparePassword } = require("../helpers/authHelper");
+const { SendVerificationCode } = require("./../helpers/email");
 const adminModel = require("../model/adminModel");
 const JWT = require("jsonwebtoken");
 
 const registerController = async (req, res) => {
   try {
-    const { name, password, phoneNumber } = req.body;
+    const { name, password, phoneNumber, email } = req.body;
+
+    if (!email) {
+      return res.status(400).send({
+        success: false,
+        message: "Email is required",
+      });
+    }
 
     if (!name) {
       return res.status(400).send({
@@ -40,11 +48,13 @@ const registerController = async (req, res) => {
 
     //saving user (admin)
     const admin = await adminModel({
+      email,
       name,
       password: hashedPassword,
       phoneNumber,
-    }).save();
+    });
     console.log(password, hashedPassword);
+    await admin.save();
 
     console.log("Admin registered successfully");
     return res.status(201).send({
@@ -92,9 +102,11 @@ const loginControllers = async (req, res) => {
     }
 
     //Token JWT
-    const token = await JWT.sign({ _id: admin._id }, process.env.JWT_SECRET, {
-      expiresIn: "24h",
+    const token = JWT.sign({ _id: admin._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
     });
+
+    // SendVerificationCode(admin.email, verificationToken);
 
     res.status(200).send({
       success: true,
@@ -159,7 +171,7 @@ const updateAdmin = async (req, res) => {
   try {
     const id = req.params.id;
     const adminExist = await adminModel.findOne({ _id: id });
-    const { name, password, phoneNumber } = req.body; // Get the updated data from request body
+    const { name, password, phoneNumber, email } = req.body; // Get the updated data from request body
 
     if (!adminExist) {
       return res.status(404).send({
@@ -174,11 +186,7 @@ const updateAdmin = async (req, res) => {
     adminModel
       .findByIdAndUpdate(
         { _id: id },
-        {
-          name,
-          password: hashedPassword,
-          phoneNumber,
-        }
+        { email, name, password: hashedPassword, phoneNumber }
       )
       .then((admins) => res.json(admins))
       .catch((error) => res.json(error));

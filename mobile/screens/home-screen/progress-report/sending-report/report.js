@@ -10,6 +10,7 @@ import {
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import React, { useState, useEffect, useContext } from "react";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -29,7 +30,6 @@ import axios from "axios";
 
 const Progress = ({ navigation, route }) => {
   const { name, img, photoUri, ...reminder } = route.params;
-
   const [state] = useContext(AuthContext);
   const [user_Id] = [state.user._id];
 
@@ -96,9 +96,11 @@ const Progress = ({ navigation, route }) => {
         setLoading(false);
         return;
       }
+      const percentage = "25"
       const formData = new FormData();
       formData.append("emergency", name);
       formData.append("location", selectedValue);
+      formData.append("percentage", percentage);
       capturedPhotos.forEach((photo) => {
         formData.append("img", {
           uri: photo,
@@ -114,6 +116,17 @@ const Progress = ({ navigation, route }) => {
         },
       };
       await axios.post("/mobile/user/upload/message", formData, config);
+      Alert.alert(
+        'SOS Sent!', // Title
+        'Your emergency report has been sent.', // Message
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Homepage'),
+          },
+        ],
+        { cancelable: false } // Prevent dismissing by tapping outside the alert
+      );
     } catch (error) {
       console.log(error);
       alert(error);

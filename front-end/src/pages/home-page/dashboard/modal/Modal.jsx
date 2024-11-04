@@ -1,72 +1,88 @@
 import React, { useState } from "react";
 import "./modal.scss";
 import { motion } from "framer-motion";
-import { fadeIn, zoomIn } from "../../../../variants";
-import { headerTable } from "../../../../../newData";
-import { Link } from "react-router-dom";
+import { zoomIn } from "../../../../variants";
+import { headerTableModal } from "../../../../newData";
+import { Link, useNavigate } from "react-router-dom";
 
-function Modal({ setOpenModal, title, data }) {
+function Modal({ setOpenModal, title, data, users }) {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  const filteredData = data.filter((item) => {
-    return (
-      item.user_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.alert.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.respond.toString().includes(searchTerm.toLowerCase()) ||
-      item.createdAt.toString().includes(searchTerm)
-    );
-  });
+  // Filter users based on search term and message IDs
+  // Filter users based on search term and matching message IDs (reversed logic)
+  const filteredUsers = data
+    .filter((datas) =>
+      users.some(
+        (user) =>
+          user._id.toString() === datas.senderId.toString() &&
+          (datas.senderId
+            .toString()
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+            user.userId
+              .toString()
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
+            user.department
+              .toString()
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
+            (datas.createdAt &&
+              datas.createdAt.toString().includes(searchTerm)) ||
+            (datas.respond && datas.respond.toString().includes(searchTerm.toLowerCase())))
+      )
+    )
+    .map((datas) => {
+      const matchedUser = users.find(
+        (user) => user._id.toString() === datas.senderId.toString()
+      );
+      return {
+        ...matchedUser,
+        createdAt: datas ? datas.createdAt : null,
+        messageID: datas ? datas._id : null,
+        respond: datas? datas.respond : null,
+      };
+    });
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  const handleSearch = (e) => setSearchTerm(e.target.value);
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
+  const handlePageChange = (page) => setCurrentPage(page);
 
   const prePage = (e) => {
     e.preventDefault();
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
   const nextPage = (e) => {
     e.preventDefault();
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handleRowClick = (data) => {
+    if (data.respond === "in-progress") {
+      console.log("Received " + data.respond);
+      navigate(`/home/report/in-progress/${data.messageID}`);
+    } else {
+      navigate(`/home/report/${data.messageID}`);
     }
   };
 
   return (
-    <motion.div
-      className="main-modal"
-      variants={fadeIn("down", 0.1)}
-      initial="hidden"
-      whileInView={"show"}
-    >
+    <div className="main-modal">
       <motion.div
-        variants={zoomIn(0.02)}
+        variants={zoomIn(0)}
         initial="hidden"
         whileInView={"show"}
         className="popup"
       >
         <div className="containerModal">
           <div className="button-container">
-            <button
-              onClick={() => {
-                setOpenModal(false);
-              }}
-            >
-              X
-            </button>
+            <button onClick={() => setOpenModal(false)}>X</button>
           </div>
           <motion.div className="popup-header">
             <span>{data.length}</span>
@@ -84,57 +100,39 @@ function Modal({ setOpenModal, title, data }) {
             <table>
               <thead className="headerTableModal">
                 <tr>
-                  {headerTable.map((header, index) => (
+                  {headerTableModal.map((header, index) => (
                     <th key={index}>{header.Label}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filteredData
+                {filteredUsers
                   .slice(
                     (currentPage - 1) * itemsPerPage,
                     currentPage * itemsPerPage
                   )
-                  .map((row) => (
-                    <tr key={row._id}>
-                      <td title={row.full_name} key={row.full_name}>
-                        {row.full_name}
-                      </td>
-                      <td title={row.user_id} key={row.user_id}>
-                        {row.user_id}
-                      </td>
-
-                      <td title={row.department} key={row.department}>
-                        {row.department}
-                      </td>
-                      <td title={row.alert} key={row.alert}>
-                        {row.alert}
-                      </td>
-                      <td title={row.createdAt} key={row.createdAt}>
-                        {row.createdAt}
-                      </td>
-                      <td
-                        className="respond"
-                        title={row.respond}
-                        key={row.respond}
-                      >
-                        <div
-                          className={`data-modal ${
-                            row.respond === "No" ? "no" : "yes"
-                          }`}
-                        >
-                          <p>{row.respond}</p>
-                        </div>
-                      </td>
-
+                  .map((row, index) => (
+                    <tr key={`${row._id}-${index}`}>
+                      {/* Combine `_id` with `index` for uniqueness */}
+                      <td>{row.name}</td>
+                      <td>{row.userId}</td>
+                      <td>{row.department}</td>
                       <td>
-                        <div className="view">
-                          <Link
+                        {row.createdAt
+                          ? new Date(row.createdAt).toLocaleString()
+                          : "N/A"}
+                      </td>
+                      <td>
+                        {row.respond.toUpperCase()}
+                      </td>
+                      <td>
+                        <div>
+                          <p
                             className="showView"
-                            to={`/home/report/${row._id}`}
+                            onClick={() => handleRowClick(row)}
                           >
-                            View
-                          </Link>
+                            View Report
+                          </p>
                         </div>
                       </td>
                     </tr>
@@ -142,51 +140,33 @@ function Modal({ setOpenModal, title, data }) {
               </tbody>
             </table>
           </div>
-          {currentPage >= 2 && (
+          {totalPages > 1 && (
             <div className="containerNav">
               <nav>
                 <ul className="pagination-modal">
                   {currentPage > 1 && (
                     <li className="page-item">
-                      <a
-                        href="#"
-                        className="page-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          prePage(e);
-                        }}
-                      >
+                      <button className="page-link" onClick={prePage}>
                         Previous
-                      </a>
+                      </button>
                     </li>
                   )}
-
-                  {Array(totalPages)
-                    .fill(0)
-                    .map((_, i) => (
-                      <li
-                        key={i}
-                        onClick={() => handlePageChange(i + 1)}
-                        className={`page-item ${
-                          currentPage === i + 1 ? "active" : ""
-                        }`}
-                      >
-                        <a className="page-link">{i + 1}</a>
-                      </li>
-                    ))}
-
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <li
+                      key={i}
+                      onClick={() => handlePageChange(i + 1)}
+                      className={`page-item ${
+                        currentPage === i + 1 ? "active" : ""
+                      }`}
+                    >
+                      <button className="page-link">{i + 1}</button>
+                    </li>
+                  ))}
                   {currentPage < totalPages && (
                     <li className="page-item">
-                      <a
-                        href="#"
-                        className="page-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          nextPage(e);
-                        }}
-                      >
+                      <button className="page-link" onClick={nextPage}>
                         Next
-                      </a>
+                      </button>
                     </li>
                   )}
                 </ul>
@@ -195,7 +175,7 @@ function Modal({ setOpenModal, title, data }) {
           )}
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
 

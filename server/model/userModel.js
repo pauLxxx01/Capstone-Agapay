@@ -26,11 +26,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please add phone number"],
     },
-    respond: {
-      type: String,
-      enum: ["Yes", "No"],
-      default: "No",
-    },
+   
     message: [
       {
         type: Schema.Types.ObjectId,

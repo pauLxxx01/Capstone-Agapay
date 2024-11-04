@@ -1,74 +1,54 @@
 import "./styles/global.scss";
 
-import NavbarScreen from "./components-screen/navbar/navbar-screen.jsx";
-import Navbar from "./components/navbar/navbar.jsx";
-import Menu from "./components/menu/menu.jsx";
-
 import Home from "./pages/screen-page/screen/screen.jsx";
 import Login from "./pages/screen-page/login/login.jsx";
-
-import Image from "./try-mobile-user/tryimage.jsx";
-import InsertUser from "./try-mobile-user/insertUser.jsx";
-import Display from "./try-mobile-user/display.jsx";
 
 import AdminRegistration from "./Accounts/Admin/admin-registration/admin.jsx";
 import DisplayAccount from "./Accounts/Admin/admin-accounts/accounts.jsx";
 import UserRegistration from "./Accounts/Users/user-registration/user.jsx";
 import UserAccount from "./Accounts/Users/user-accounts/userAccounts.jsx";
 
-import Footer from "./components/footer/footer.jsx";
-import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
+import Report from "./pages/home-page/report/report.jsx";
 import Dashboard from "./pages/home-page/dashboard/dashboard";
 import ViewReports from "./pages/home-page/process-report/view-report/view";
+import OngoingReports from "./pages/home-page/process-report/contact-user/ongoing-process.jsx";
+
+import { API_URL } from "./constants.js";
+
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+import { Screen, Layout } from "./layout/layout.jsx";
+import Responder from "./Accounts/Responder/responder-registration/responder-register.jsx";
+import ResponderAccounts from './Accounts/Responder/responder-accounts/responder-display';
+
 function App() {
   const [users, setUsers] = useState([]);
+  const [messages, setMessages] = useState([]);
+
+  const [error, setError] = useState(null);
+
+  axios.defaults.baseURL = "http://192.168.18.42:8080/admin/auth";
+
   useEffect(() => {
-    axios
-      .get("http://localhost:8080/admin/auth/user/getUser")
-      .then((response) => {
-       
-        setUsers(response.data.users);
-      })
-      .catch((error) => {
+    const fetchData = async () => {
+      try {
+        const [usersResponse, messagesResponse] = await Promise.all([
+          axios.get(`/user/getUser `),
+          axios.get(`/user/messages`),
+        ]);
+      
+        setUsers(usersResponse.data.users);
+        setMessages(messagesResponse.data.messages);
+      } catch (error) {
+        setError("Error fetching data");
         console.error(error);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
-
-  const Screen = () => {
-    return (
-      <div className="main-screen">
-        <div className="background" />
-        <NavbarScreen />
-        <div className="container">
-          <div id="home-anchor" className="container-screen">
-            <Outlet />
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  };
-
-  const Layout = () => {
-    return (
-      <div className="main">
-        <Navbar />
-        <div className="container">
-          <div className="menuContainer">
-            <Menu />
-          </div>
-
-          <div className="contentContainer">
-            <Outlet />
-          </div>
-        </div>
-        <Footer className="footer" />
-      </div>
-    );
-  };
 
   const router = createBrowserRouter([
     {
@@ -82,7 +62,7 @@ function App() {
 
         {
           path: "/login",
-          element: <Login />,
+          element: <Login users={users} />,
         },
         {
           path: "/admin/registration",
@@ -101,13 +81,13 @@ function App() {
           element: <UserAccount users={users} />,
         },
         {
-          path: "/insertImg",
-          element: <Image />,
+          path: "/admin/responder/registration",
+          element: <Responder />,
         },
         {
-          path: "/display",
-          element: <Display />,
-        },
+          path: 'admin/responder/accounts',
+          element: <ResponderAccounts />
+        }
       ],
     },
     {
@@ -119,8 +99,16 @@ function App() {
           element: <Dashboard users={users} />,
         },
         {
+          path: "/home/report",
+          element: <Report users={users} messages={messages} />,
+        },
+        {
           path: "/home/report/:id",
           element: <ViewReports />,
+        },
+        {
+          path: "/home/report/in-progress/:id",
+          element: <OngoingReports />,
         },
       ],
     },

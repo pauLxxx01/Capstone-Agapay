@@ -108,9 +108,10 @@ export default function Homepage({ navigation }) {
         {menuItems.map((item, index) => (
           <MenuList
             key={index}
-            navigate={item.navigate}
+            toNavigate={item.toNavigate}
             name={item.name}
             text={item.text}
+            navigation={navigation}
           />
         ))}
       </Animated.View>

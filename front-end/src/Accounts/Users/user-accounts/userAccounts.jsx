@@ -25,6 +25,9 @@ const userAccounts = ({ users }) => {
   const [department, setDepartment] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
 
+  //messages
+  const [messages, setMessages] = useState([]);
+
   //for parent
   const [parents, setParents] = useState([]);
 
@@ -32,38 +35,50 @@ const userAccounts = ({ users }) => {
   const [parentRelationship, setParentRelationship] = useState("");
   const [parentPhone, setParentPhone] = useState("");
 
+  //error
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const navigate = useNavigate();
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:8080/admin/auth/user/parent/getParent`)
-      .then((response) => {
-        setParents(response.data.parents);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    const fetchData = async () => {
+      try {
+        const [parentsResponse, messagesResponse] = await Promise.all([
+          axios.get(`/user/parent/getParent`),
+          axios.get(`/user/messages`),
+        ]);
+        setParents(parentsResponse.data.parents);
+        setMessages(messagesResponse.data.messages);
+      } catch (error) {
+        setError("Error fetching data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
   const handleDelete = async (id) => {
     try {
       // Fetch the user to get the parent ID
       const userResponse = await axios.get(
-        `http://localhost:8080/admin/auth/user/account/specific/${id}`
+        `/user/account/specific/${id}`
       );
       const parentId = userResponse.data.user.parent;
+      const messageId = userResponse.data.user.message;
       // Use Promise.all to delete both user and parent in parallel
       await Promise.all([
-        axios.delete(`http://localhost:8080/admin/auth/user/delete/${id}`),
+        axios.delete(`/user/delete/${id}`),
         axios.delete(
-          `http://localhost:8080/admin/auth/user/parent/delete/${parentId.toString()}`
+          `/user/parent/delete/${parentId.toString()}`
         ),
+        axios.delete(`/user/message/delete/${messageId.toString()}`)
       ]);
       window.location.reload();
-      console.log("User and parent deleted successfully");
     } catch (error) {
       console.error("Error deleting user and parent:", error);
     }
@@ -74,7 +89,7 @@ const userAccounts = ({ users }) => {
     const formattedParentPhoneNumber = formatPhilippinePhoneNumber(parentPhone);
     try {
       await axios.put(
-        `http://localhost:8080/admin/auth/userUpdate/parentUpdate/${id}`,
+        `/userUpdate/parentUpdate/${id}`,
         {
           name,
           password,
@@ -115,12 +130,22 @@ const userAccounts = ({ users }) => {
     setSelectedUser(null);
   };
 
+  console.log("message: ", messages);
+  console.log("parents: ", parents);
+  console.log("users : ", users);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
     <div className="admin-accounts">
       <h2>User Accounts</h2>
       <button className="btn" onClick={() => navigate("/user/registration")}>
         Create Account
       </button>
+
+      {/* modal for updating user and parent info */}
+
       <div className="admin-list">
         {isModalOpen && (
           <div className="modal">
@@ -154,7 +179,6 @@ const userAccounts = ({ users }) => {
                       <label htmlFor="password">Password</label>
                       <TextField
                         className="input"
-                       
                         type={showPassword ? "text" : "password"}
                         id="password"
                         size="small"
@@ -187,7 +211,9 @@ const userAccounts = ({ users }) => {
                         id="userId"
                         size="small"
                         value={userId}
-                        onChange={(e) => setUserId(e.target.value.toUpperCase())}
+                        onChange={(e) =>
+                          setUserId(e.target.value.toUpperCase())
+                        }
                         required
                       />
                     </div>
@@ -288,24 +314,49 @@ const userAccounts = ({ users }) => {
             </div>
           </div>
         )}
+
+        {/* display the user information */}
+
         {users.length > 0 ? (
           users.map((user) => {
             const userParent = parents.find(
               (parent) => parent._id.toString() === user.parent.toString()
             );
 
+            // Collect all message IDs from users
+            const userMessageIds = users.flatMap((user) =>
+              user.message.map((msg) => msg._id)
+            );
+
+            // Find the user's messages (assuming user.message is an array of message IDs)
+            const userMessages = user.message
+              .map((userMsgId) =>
+                messages.find(
+                  (message) => message._id.toString() === userMsgId.toString()
+                )
+              )
+              .filter(Boolean); // Filter out any undefined values
+
+            // Count the messages related to the user
+            const messageCount = messages.filter((msg) =>
+              userMessageIds.includes(msg._id.toString())
+            ).length;
+
             return (
               <div key={user._id} className="admin-card">
                 <div className="admin-info">
                   <h3 className="admin-name">{user.name}</h3>
+                  <p className="admin-phone">{user._id}</p>
                   <p className="admin-phone">{user.userId}</p>
                   <p className="admin-phone">{user.department}</p>
                   <p className="admin-phone">{user.phoneNumber}</p>
+                  <p className="admin-phone">{user.message.length}</p>
                 </div>
                 <div className="parents-info">
                   {userParent ? (
                     <div key={userParent._id} className="admin-info">
                       <h3 className="admin-name">{userParent.name}</h3>
+                      <p className="admin-phone">{userParent._id}</p>
                       <p className="admin-phone">{userParent.relationship}</p>
                       <p className="admin-phone">{userParent.phone}</p>
                     </div>
@@ -313,6 +364,23 @@ const userAccounts = ({ users }) => {
                     <p className="no-admins">No parents found.</p>
                   )}
                 </div>
+                <div className="messages">
+                  <h3 className="admin-name">Message</h3>
+                  <p className="admin-phone">Count: {userMessages.length}</p>
+                  <br></br>
+                  {userMessages.length > 0 ? (
+                    userMessages.map((message) => (
+                      <div key={message._id} className="admin-info">
+                        <p className="admin-phone">{message.emergency}</p>
+                        <p className="admin-phone">{message._id}</p>
+                        <p className="admin-phone">{message.respond}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="no-messages">No messages found.</p>
+                  )}
+                </div>
+
                 <button
                   className="btn"
                   onClick={() => openUpdateModal(user, userParent)}

@@ -20,7 +20,8 @@ import InputBox from "../../../components/TextFieldBox";
 import { AuthContext } from "../../../context/authContext";
 import { createTwoButtonAlert } from "../../../components/alert/Alert";
 
-//"http://192.168.18.42:8080/admin/auth/mobile/user/login",
+const API_BASE_URL = "http://192.168.18.42:8080/admin/auth"; // Update this as needed
+
 const { width, height } = Dimensions.get("window");
 
 const Login = ({ navigation }) => {
@@ -31,67 +32,62 @@ const Login = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-
   const handleSubmit = async () => {
+    setLoading(true); // Start loading
+    // axios.post("/mobile/user/login", {
+    //   userId: userId.toUpperCase(),
+    //   password,
+    // })
+    // .then((response) => {
+    //   console.log(response);
+    // })
+    // .catch((error) => {
+    //   console.log(error);
+    //   Alert.alert("Login failed!", error.response.data.message || "No data received.");
+    //   setLoading(false); // Stop loading
+    // });
+
+
+    
     try {
       console.log("USERS: ", userId, password);
-      if (!userId && !password) {
+      if (!userId || !password) {
         Alert.alert(
           "Alert",
-          "Please provide both student number and password!",
-          [{ text: "OK" }]
+          "Please provide both student number and password!"
         );
-        console.log(error);
-        setLoading(true);
+        setLoading(false); // Stop loading
         return;
       }
-      if (!userId) {
-        alert("Please enter your Student Number");
-        console.log(error);
-        setLoading(true);
-        return;
-      }
-      if (!password) {
-        alert("Please enter your Password!");
-        console.log(error);
-        setLoading(true);
-        return;
-      }
-
-      const UpperCase = userId.toUpperCase();
-      setLoading(false);
-      const { data } = await axios.post("/mobile/user/login", {
-        userId: UpperCase,
+      const {data} = await axios.post(`/mobile/user/login`, {
+        userId: userId.toUpperCase(),
         password,
       });
-
-      if (!data) {
-        Alert.alert("Login failed! No data received.");
-        console.log("Login failed! No data received.");
-        setLoading(false);
-        return;
-      }
 
       console.log(data);
       setState(data);
       await AsyncStorage.setItem("@auth", JSON.stringify(data));
-      alert(data && data.message);
+      Alert.alert("Success", data.message || "Login successful!");
       navigation.navigate("Homepage");
 
       getLocalStorageData();
     } catch (error) {
-      alert(error);
-      setLoading(false);
-      console.log(error);
+      Alert.alert(
+        "Login failed",
+        error.response.data.message || "An error occurred. Please try again."
+      );
+      console.log("Login failed", error.response.data.message);
+    } finally {
+      setLoading(false); // Ensure loading is stopped
     }
   };
 
-  //Temp function to check storage data
   const getLocalStorageData = async () => {
     let dataString = await AsyncStorage.getItem("@auth");
     let data = dataString ? JSON.parse(dataString) : null;
     console.log("Full data from AsyncStorage:", data);
     console.log("Local Storage user:", data ? data.user : "No data found");
+    console.log("Token:", data.token);
   };
 
   return (

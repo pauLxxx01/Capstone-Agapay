@@ -1,10 +1,10 @@
 const menuItems = [
-  { navigate: "Notification", name: "bell", text: "Notification Settings" },
-  { navigate: "Announcement", name: "bullhorn", text: "Announcement" },
-  { navigate: "Transaction", name: "history", text: "Transaction History" },
-  { navigate: "UpdateInfo", name: "refresh", text: "Update Information" },
-  { navigate: "Feedback", name: "star", text: "Feedback" },
-  { navigate: "About", name: "info-circle", text: "About the application" },
+  { toNavigate: "Notification", name: "bell", text: "Notification Settings" },
+  { toNavigate: "Announcement", name: "bullhorn", text: "Announcement" },
+  { toNavigate: "Transaction", name: "history", text: "Transaction History" },
+  { toNavigate: "UpdateInfo", name: "refresh", text: "Update Information" },
+  { toNavigate: "Feedback", name: "star", text: "Feedback" },
+  { toNavigate: "About", name: "info-circle", text: "About the application" },
 ];
 
 const infoCardData = [
